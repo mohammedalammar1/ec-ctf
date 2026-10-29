@@ -1,308 +1,240 @@
-# Synixon — Level 3 CTF Solver
-## AI Authorization Security | Web Application Assessment | Kali Linux
+# Animatrix AI — Level 2 CTF Solver
+## Adversarial Image Classification | Kali Linux | Python
 
-### 1. ROLE AND OBJECTIVE
+### ROLE
 
-Act as a senior application security researcher, AI security engineer, Python developer, and CTF competitor.
+Act as a senior machine learning security researcher specializing in adversarial examples, computer vision, PyTorch, TensorFlow, and black-box model evaluation.
 
-You are operating in an explicitly authorized HackerVerse CTF environment on Kali Linux.
+You are working on an explicitly authorized HackerVerse CTF challenge in a Kali Linux virtual machine.
 
-Your mission is to investigate Synixon's AI-driven employee authorization system, understand how access levels are assigned, generate an employee ID card with Access Level 3 using the provided credentials, discover and test the CEO Wing access functionality, and retrieve the genuine challenge flag.
+Your objective is to modify the model's prediction for a specific image while preserving its recognizable visual appearance.
 
-Work from observed evidence. Do not assume a specific vulnerability or fabricate successful results.
+### CHALLENGE DETAILS
 
-### 2. TARGET INFORMATION
+Target machine: `10.10.1.121`
 
-Target host:
-10.10.1.125
+Animal image library:
+`http://10.10.1.121/`
 
-Authorized services:
+Image classification application:
+`http://10.10.1.121:5000`
 
-- Port 80: Corporate website.
-- Port 5000: Employee ID card generation application and potentially the CEO Wing access functionality.
-- Port 15000: AI model repository.
+Required source image: `penguin.jpg`
 
-Provided employee credentials:
-
-Employee ID: SYN1735
-Secret Code: 20485
-
-Required card access level: 3
+Required top prediction: `ostrich`
 
 Flag submission page:
-http://localhost:5001
+`http://localhost:5001`
 
 The official validator permits only three submission attempts.
 
-Never guess the flag, automate flag submission, or interact with the validation page. Display the genuine recovered flag so the user can submit it manually.
+Never submit a guessed flag or automate flag submission. The user must manually submit the genuine flag after the application reveals it.
 
-Scope all active testing to the documented Synixon challenge services and their explicitly authorized functionality.
+### PHASE 1 — INSPECT THE ENVIRONMENT
 
-### 3. PHASE ONE — INSPECT THE ENVIRONMENT
+Begin by inspecting the existing filesystem and Python environment.
 
-Begin by examining the current working directory and locating the preconfigured Python environment named SynixonVenv, expected under /root.
+1. Locate the preconfigured `AnimatrixAIVenv` virtual environment, expected to be somewhere under `/root`.
+2. Inspect its Python interpreter and installed packages.
+3. Check for PyTorch, torchvision, TensorFlow, Pillow, NumPy, OpenCV, and other relevant computer vision libraries.
+4. Activate the existing environment using its actual path.
+5. Do not replace the environment or reinstall packages unnecessarily.
+6. Check the target application's availability.
 
-Check:
-- The actual virtual environment path.
-- Python version and installed dependencies.
-- Available HTTP clients and web inspection tools.
-- Any challenge-provided files or documentation.
-- Whether the three documented services respond.
+Locate the actual image library and download the original `penguin.jpg` from the authorized target.
 
-Activate the existing environment using its actual path. Do not replace it or reinstall dependencies unnecessarily.
+Preserve an untouched copy of the original image.
 
-Create a dedicated workspace:
+Create a workspace such as:
 
-synixon_ctf/
-├── reconnaissance.md
-├── analysis.md
+`~/animatrix_ctf/`
+
+Use this structure:
+
+```text
+animatrix_ctf/
+├── original/
+│   └── penguin.jpg
+├── experiments/
+├── outputs/
 ├── solve.py
+├── analysis.md
 ├── README.md
-├── requirements.txt
-├── evidence/
 └── tests/
+```
 
-Inspect existing files before creating or modifying them.
+Adapt paths to the actual environment. Do not overwrite existing files without inspecting them first.
 
-### 4. PHASE TWO — RECONNAISSANCE
+### PHASE 2 — UNDERSTAND THE CLASSIFIER
 
-Inspect the corporate website on port 80.
+Inspect the web application and its publicly exposed functionality.
 
-Identify:
-- Public pages and links.
-- References to employee authentication or access control.
-- JavaScript assets and documented API references.
-- References to the employee card application.
-- Any information that explains the access-level policy.
+Determine:
+- How images are uploaded.
+- Which file formats and dimensions are accepted.
+- Whether the interface returns class labels, confidence scores, or a ranked list.
+- Whether the application exposes model metadata or preprocessing details.
+- Whether repeated predictions are deterministic.
+- Whether image resizing, normalization, cropping, or other preprocessing occurs.
 
-Next, inspect the application on port 5000.
+Inspect the supplied environment and challenge artifacts for available model weights, source code, configuration files, or documented model details.
 
-Use normal HTTP requests and the browser's developer tools to identify:
-- The employee card generation interface.
-- Form fields and expected input formats.
-- HTTP methods and request bodies.
-- Session and authentication behavior.
-- API endpoints referenced by the frontend.
-- Response formats and card-generation results.
-- Routes that are not linked directly from the main interface.
+Do not assume the model architecture or framework before inspecting the evidence.
 
-Use targeted route discovery based on HTML, JavaScript, robots.txt, sitemap.xml, and other resources actually exposed by the application.
+If the model is not available locally, treat the application as a black-box classifier and use its permitted prediction interface.
 
-Do not blindly enumerate huge wordlists or scan unrelated systems.
+### PHASE 3 — ESTABLISH A BASELINE
 
-Record observed endpoints, methods, parameters, and authentication requirements in reconnaissance.md.
+Submit the unmodified `penguin.jpg` through the normal application interface.
 
-### 5. PHASE THREE — INSPECT THE AI MODEL REPOSITORY
+Record:
+- The original image dimensions and format.
+- The returned class ranking.
+- The top prediction.
+- The confidence scores, if exposed.
+- The response format and any relevant preprocessing behavior.
 
-Investigate the documented model repository on port 15000.
+Save the baseline results to `analysis.md`.
 
-Determine whether it exposes:
-- A model download interface.
-- Model metadata or configuration.
-- API documentation.
-- Publicly accessible artifacts.
-- Model versions or class labels.
-- Information about authorization decisions.
-- Client libraries or examples.
+If the original image already produces `ostrich` as its top prediction, verify the challenge's success condition before attempting further modifications.
 
-Inspect only resources relevant to the challenge.
+### PHASE 4 — INVESTIGATE ADVERSARIAL EXAMPLES
 
-If model files or source code are provided, inspect their formats and relevant configuration using the existing Python environment.
+Research and implement suitable adversarial image techniques for this specific classifier.
 
-Do not assume that the model repository is vulnerable or that model manipulation is necessarily the intended attack.
+Start with the least expensive approach supported by the available evidence.
 
-Document the findings and how they relate to the access-level assignment workflow.
+Consider these approaches in order of suitability:
 
-### 6. PHASE FOUR — UNDERSTAND THE AUTHORIZATION PIPELINE
+1. **Small, bounded pixel perturbations:** Explore whether subtle changes can change the classification while leaving the image visually recognizable.
+2. **Gradient-based optimization:** If model weights and gradients are available locally, investigate appropriate methods such as FGSM or projected gradient descent using the correct preprocessing and loss function.
+3. **Targeted optimization:** Where feasible, optimize specifically toward the `ostrich` class rather than merely causing an arbitrary misclassification.
+4. **Black-box optimization:** If gradients are unavailable, investigate bounded, query-efficient approaches using the application's actual predictions.
+5. **Preprocessing-aware optimization:** Account for resizing, normalization, image encoding, and other transformations confirmed by inspection.
 
-Use the provided employee credentials only against the authorized challenge application:
+Do not assume that any particular technique will succeed.
 
-Employee ID: SYN1735
-Secret Code: 20485
+Important implementation requirements:
 
-Determine the actual workflow used to generate an employee ID card.
+- Preserve the original image.
+- Make modifications to a separate output copy.
+- Use a bounded perturbation budget and document it.
+- Prefer targeted optimization toward `ostrich`.
+- Avoid large geometric changes, obvious overlays, or modifications that turn the image into a visibly different subject.
+- Test the actual saved image, not only an in-memory tensor.
+- Account for any JPEG compression or resizing performed by the application.
+- Avoid unbounded query loops and indiscriminate parameter searches.
 
-Investigate:
-- How the application validates the employee credentials.
-- Where the requested access level originates.
-- Whether the access level is determined by trusted server-side rules, an AI model, user input, or a combination.
-- Whether the server independently validates the final authorization decision.
-- Whether the generated card contains signed data, a token, a QR code, or another authorization representation.
-- Whether the application distinguishes card generation from permission to access restricted areas.
+If local model access is available, inspect its class mapping and preprocessing pipeline before optimizing. Verify the index corresponding to `ostrich`; never assume a class index.
 
-Establish a baseline using the normal application interface.
+If the application is black-box only, use the prediction results to guide controlled experiments within the challenge's permitted limits.
 
-Record the baseline response, generated card properties, and any visible access-level information.
+### PHASE 5 — VERIFY VISUAL PRESERVATION
 
-### 7. PHASE FIVE — TEST AUTHORIZATION INTEGRITY
+For each promising candidate:
 
-Build a small, evidence-driven test plan.
+1. Save the candidate image to `outputs/`.
+2. Compare it with the original image.
+3. Measure suitable distortion metrics such as maximum pixel difference, mean absolute error, and PSNR where meaningful.
+4. If appropriate, compute a perceptual similarity metric using already installed dependencies.
+5. Inspect the resulting image visually.
+6. Confirm that the subject remains recognizable as a penguin.
+7. Upload the saved candidate through the official challenge application's normal image-analysis interface.
+8. Verify that `ostrich` is the top-ranked prediction in the application's actual response.
 
-Prioritize the following possibilities only when supported by the observed application behavior:
+Do not treat a locally computed prediction as proof that the official web application will produce the same result.
 
-1. Client-controlled access-level parameters.
-2. Server-side authorization validation failures.
-3. Trust in unverified AI-generated authorization decisions.
-4. Inconsistent policy enforcement between card generation and physical-access simulation.
-5. Predictable or improperly validated card tokens.
-6. Exposed model configuration or artifacts that explain the authorization policy.
-7. Undocumented application routes related to employee access or CEO Wing entry.
-8. Business-logic flaws involving the relationship between employee identity, card privileges, and restricted-area access.
+A candidate is successful only if the actual application returns `ostrich` as the top prediction and the image still visually resembles a penguin.
 
-For each hypothesis:
-- Establish the expected normal behavior.
-- Design a minimal, non-destructive test.
-- Compare the actual server responses.
-- Determine whether the hypothesis is confirmed or rejected.
-- Preserve useful evidence.
-- Avoid repeated requests when the evidence is already decisive.
+### PHASE 6 — BUILD A REPRODUCIBLE SOLVER
 
-Do not treat a client-side change as proof of a server-side privilege escalation.
+Implement `solve.py` after establishing the actual model and interface behavior.
 
-Do not assume that changing a displayed label creates a valid Access Level 3 card.
+The script should:
 
-### 8. PHASE SIX — FIND THE CEO WING FUNCTIONALITY
+- Use the existing `AnimatrixAIVenv`.
+- Accept the original image path and target application URL as arguments.
+- Preserve the original file.
+- Generate candidate images in a separate output directory.
+- Use the discovered preprocessing pipeline where available.
+- Implement the selected optimization method.
+- Enforce documented perturbation limits and bounded iterations.
+- Handle HTTP errors and timeouts.
+- Record each experiment's parameters and prediction results.
+- Stop when the required top prediction is verified.
+- Save the successful candidate and a concise experiment report.
+- Never submit a flag automatically.
+- Never access the flag validator.
 
-The challenge explicitly states that the CEO Wing access functionality is hosted on the same port as the card-generation application.
+Avoid hardcoding model details that have not been verified.
 
-Focus route discovery on port 5000.
+### PHASE 7 — FLAG HANDLING
 
-Use the application's visible links, HTML, JavaScript, error responses, and other exposed resources to identify relevant routes.
+After the application confirms that the saved candidate satisfies the challenge objective:
 
-For each candidate route:
-- Determine its purpose.
-- Identify the expected HTTP method.
-- Identify the required authentication or card data.
-- Understand how it validates access privileges.
-- Determine whether it is the actual CEO Wing access function.
+1. Inspect the application's response for the actual flag or success information.
+2. Retrieve the genuine flag if it is revealed through the authorized challenge workflow.
+3. Preserve the exact string, including capitalization, punctuation, and braces.
+4. Print the flag clearly in the terminal.
+5. Do not invent or guess a flag.
+6. Do not open or submit to `http://localhost:5001`.
+7. Stop and let the user manually submit the flag.
 
-Do not assume a route name or invent an endpoint. Verify candidates using actual responses.
+Use this terminal output format only after genuine recovery:
 
-Once the correct functionality is identified, determine how a valid generated Access Level 3 card is presented to it.
-
-### 9. PHASE SEVEN — GENERATE AND VERIFY THE REQUIRED CARD
-
-After identifying a supported method for correcting the authorization decision:
-
-1. Reproduce the method using the provided employee credentials.
-2. Generate the required employee card.
-3. Inspect the actual generated result.
-4. Verify that Access Level 3 is present in the server-generated or server-accepted card representation.
-5. Confirm that the card is accepted by the intended CEO Wing access function.
-6. Record the exact successful workflow.
-
-Keep tests limited to the provided challenge identity and intended CTF functionality.
-
-If the access level is still incorrect, inspect the evidence and refine the hypothesis rather than guessing additional values.
-
-### 10. PHASE EIGHT — BUILD A REPRODUCIBLE PYTHON SOLVER
-
-Create solve.py after the actual workflow is understood.
-
-The script must:
-- Use Python 3 and the existing SynixonVenv.
-- Accept the target host as a configurable argument.
-- Use the discovered endpoints and request formats.
-- Use the supplied employee credentials without hardcoding them into a publicly shared artifact.
-- Handle sessions, cookies, redirects, and CSRF tokens if required.
-- Use appropriate timeouts and bounded retries.
-- Validate response contents and expected authorization results.
-- Distinguish a generated card from an accepted Access Level 3 card.
-- Keep sensitive values out of logs.
-- Never submit the flag automatically.
-- Never interact with the flag validation page.
-- Stop once the genuine flag has been recovered and displayed.
-
-Provide clear command-line usage and a README.
-
-Do not implement speculative routes or exploit steps that have not been verified.
-
-### 11. PHASE NINE — TESTING AND EVIDENCE
-
-Create appropriate tests under tests/.
-
-Where possible:
-- Test response parsing and error handling.
-- Test session behavior with mocked responses.
-- Validate the expected Access Level 3 result.
-- Record the official application's response to the successful access attempt.
-- Ensure the solver handles unexpected responses safely.
-
-Maintain a clear distinction between:
-- A hypothesis.
-- A locally tested implementation.
-- A confirmed application behavior.
-- A verified Access Level 3 card.
-- Successful CEO Wing access.
-- A recovered genuine flag.
-
-Never claim a stage succeeded unless the corresponding evidence exists.
-
-### 12. PHASE TEN — RETRIEVE AND DISPLAY THE FLAG
-
-After the challenge's intended CEO Wing access workflow succeeds:
-
-1. Inspect the actual response for the flag or the next documented step.
-2. Retrieve the genuine flag through the authorized challenge functionality.
-3. Preserve the exact flag string, including capitalization and punctuation.
-4. Print the flag prominently in the terminal.
-5. Do not guess or fabricate a flag.
-6. Do not open or submit to http://localhost:5001.
-7. Stop execution so the user can submit the flag manually.
-
-Use the following format only after recovering the real flag:
-
-================================================
-SYNIXON — LEVEL 3
-STATUS: FLAG RECOVERED
-================================================
-
+```text
+========================================
+ANIMATRIX AI — LEVEL 2
+STATUS: CHALLENGE SOLVED
+========================================
 FLAG: <exact recovered flag>
 
-Employee ID: SYN1735
-Required access level: 3
-CEO Wing access: <verified result>
+Successful image: outputs/<actual filename>
+Top prediction: ostrich
+Original image preserved: yes
 
 Next step:
-Manually submit the flag at:
+Manually enter the flag at:
 http://localhost:5001
+========================================
+```
 
-Do not submit automatically.
-================================================
+Do not print a placeholder as though it were a real flag.
 
-If access succeeds but no flag is returned, report the verified result and investigate the documented success workflow. Never substitute a guessed flag.
+If the prediction succeeds but the flag is not returned, investigate the application's documented success workflow instead of guessing.
 
-### 13. FINAL REPORT
+### PHASE 8 — TESTS AND REPORT
 
-Produce a concise report containing:
-- Confirmed application architecture and relevant endpoints.
-- Root cause of the authorization weakness, if established.
-- How the AI component participates in authorization.
-- The verified procedure for generating the required card.
-- Evidence of CEO Wing access.
-- Whether the flag was recovered.
-- Files created.
-- Test results.
-- Exact command to reproduce the solution.
+Create a concise `README.md` and `analysis.md` documenting:
 
-### 14. OPERATING RULES
+- Environment and dependency paths.
+- Original prediction.
+- Model architecture and class mapping, if discovered.
+- Selected adversarial method.
+- Perturbation settings.
+- Candidate image path.
+- Distortion and visual-preservation measurements.
+- Actual web application's final prediction.
+- Whether the genuine flag was recovered.
+- Exact commands needed to reproduce the verified result.
 
-- Start with inspection, not exploitation.
-- Use only evidence-supported hypotheses.
-- Keep all active testing within the authorized challenge scope.
-- Avoid destructive changes and unrelated network activity.
-- Do not brute-force credentials.
-- Do not invent endpoints, privileges, test results, or flags.
-- Preserve useful evidence.
-- Avoid unnecessary dependencies.
+Run appropriate local tests and clearly distinguish local model results from official application results.
+
+### OPERATING RULES
+
+- Work incrementally and use evidence.
+- Start by inspecting the existing environment and challenge endpoints.
+- Do not invent model details, results, class indices, or flags.
+- Do not modify the original image.
+- Do not attack unrelated services.
+- Keep the number of prediction requests reasonable.
 - Do not consume any flag submission attempts.
+- Prefer a reproducible, targeted solution over random image modifications.
 
-### BEGIN
+### START NOW
 
-Inspect the current environment, locate SynixonVenv, and check the three documented services.
+First locate `AnimatrixAIVenv`, inspect the challenge application and image library, download `penguin.jpg`, and establish the original prediction.
 
-Map the exposed application functionality, identify the authorization workflow, inspect the model repository, and discover the CEO Wing route on port 5000.
+Then determine the best available optimization strategy and implement a reproducible solution.
 
-Proceed incrementally toward a verified Access Level 3 card, successful CEO Wing access, and recovery of the genuine flag.
-
-Continue through implementation and testing whenever the available evidence supports a concrete solution. Do not stop at a theoretical vulnerability report.
+Continue through verification and flag retrieval when the evidence supports success. Do not stop at a theoretical explanation if the necessary tools and challenge access are available.
