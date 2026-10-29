@@ -1,16 +1,25 @@
 ```
-### AI-Integrated Challenge Analysis — Mandatory
+Level 3 - Synixon
+Scenario
+Synixon is an enterprise environment where AI systems manage employee authorization and physical access. As part of a security assessment, you have been tasked with evaluating the security of its AI-driven access control system and determining whether its authorization decisions can be manipulated.
 
-Treat Synixon as an AI-integrated security challenge, not merely a conventional web application.
+Description
+The target machine is available at 10.10.1.125. The following services are available for the assessment:
 
-1. Identify every endpoint, workflow, model repository, or backend component that uses AI/LLMs or AI-driven authorization decisions.
-2. Determine which security decisions are made by deterministic application code and which depend on model outputs.
-3. Analyze how natural-language instructions, model context, input validation, trust boundaries, and output handling affect the challenge.
-4. Test relevant AI-specific weaknesses only within the authorized CTF scope, alongside conventional web vulnerabilities and access-control flaws.
-5. Do not assume that an AI-related vulnerability exists merely because an AI model repository or AI functionality is present. Verify the actual implementation and behavior before drawing conclusions.
-6. Build a reproducible Python solver based on verified findings, with bounded retries, clear diagnostics, and verification of each required step.
-7. Preserve the original challenge state wherever possible. Avoid unnecessary account changes, destructive operations, and automated flag submissions.
-8. Document the confirmed exploit chain, the evidence supporting each step, environmental dependencies, and any conditions that may prevent the solver from working in a fresh challenge instance.
+Port 80: Synixon corporate website.
+Port 5000: Employee ID card generation application.
+Port 15000: AI model repository.
+The employee ID card generation application requires the following credentials:
 
-The objective is to understand how AI integration changes the attack surface and challenge difficulty, rather than relying exclusively on ordinary web enumeration.
+Employee ID: SYN1735
+Secret Code: 20485
+Explore the available resources and application functionality, including routes that may not be linked directly from the main interface.
+
+Objective
+Manipulate the AI-driven authorization system to generate an ID card with Access Level 3 for the provided employee credentials. Identify the application functionality used to access the CEO Wing, determine how the generated card can be used to gain access, and retrieve the flag.
+
+Hint: The CEO Wing access functionality is hosted on the same port as the employee ID card generation application.
+
+Technical Note
+For this CTF, a preconfigured Python virtual environment (SynixonVenv), including the required dependencies, is available on the Kali Linux VM in the root directory. If required, use the provided environment to solve the CTF.
 ```
